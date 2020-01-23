@@ -21,7 +21,7 @@ def genWhiteNoiseWaveform(fullResponse,rms,shape):
     whiteResponseFFT = np.multiply(fullResponse.ResponseFFT,whiteFFT) #ElecResponseFFT,whiteFFT)
     
     # back to time domain...
-    whiteResponse = no.rint(np.fft.irfft(whiteResponseFFT))
+    whiteResponse = np.rint(np.fft.irfft(whiteResponseFFT))
 
     print("whiteResponse shape",whiteResponse.shape,", whiteNoise shape:",whiteNoise.shape)
     

@@ -40,7 +40,7 @@ class FilterGauss(Filter):
 
         self.params    = params
         self.filter    = (np.exp(-0.5*((self.frequencyBins-self.params[0])/self.params[1])**2)).astype(complex)
-        self.filter[0] = complex(0.,0.)  # set the constant component to zero 
+        self.filter[0] = complex(0.,0.)  # set the constant component to zero
 
         # normalize to the peak value
         largestElement = np.amax(self.filter)
