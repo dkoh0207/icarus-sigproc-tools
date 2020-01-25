@@ -5,17 +5,23 @@ from sigproc_tools.sigproc_objects.rawdigit import RawDigit
 
 # An object which will perform basic noise filtering on an input data set of RawDigits
 
-class FilterEvents:
+class FilterEventsByCrate:
     """
     The goal here is to provide access to a series of objects that represent RawDigit waveforms 
     after several noise filter steps have been performed including coherent noise subtraction
     """
-    def __init__(self,eventsFolder,producer):
+    def __init__(self,eventsFolder,producer,crateNum):
         """
         args: eventsFolder is the folder containing the desired RawDigits by event
               producer is the path to the RawDigits for uproot to decode when looking them up
         """
         self.rawdigits = RawDigit(eventsFolder,producer)
+        self.crateNum  = crateNum
+
+        # Get starting and ending indices
+        self.numChannelsPerCrate = 576
+        self.startIndex          = self.numChannelsPerCrate * crateNum
+        self.stopIndex           = self.startIndex + self.numChannelsPerCrate
 
     # Given direct access to the RawDigits to recover its functionality 
     def getRawDigits(self):
@@ -31,11 +37,15 @@ class FilterEvents:
         eventNum  = 10
         numEvents = self.rawdigits.numEvents()
         nTicks    = self.rawdigits.numTicks(eventNum)
-        nChannels = self.rawdigits.numChannels(eventNum)
+        nChannels = self.numChannelsPerCrate
         nGroups   = nChannels // grouping
         
-        print("Number of channels:",nChannels,", grouping:",grouping,", nGroups:",nGroups)
-        
+        print("Number of channels:",nChannels,", grouping:",grouping,", nGroups:",nGroups,", start/stop:",self.startIndex,"/",self.stopIndex)
+
+        if self.startIndex > self.rawdigits.numChannels(eventNum):
+            print("--> Bad index, start:",self.startIndex,", numChannels:",self.rawdigits.numChannels(eventNum))
+            return 0        
+
         # Set up to loop over events
         # Define placeholders for the output arrays
         self.rawWaveforms        = np.ndarray([numEvents,nChannels,nTicks])
@@ -51,7 +61,8 @@ class FilterEvents:
         print("Applying filtering to ",numEvents,"events")
         
         for eventNo in range(numEvents):
-            self.rawWaveforms[eventNo]         = self.rawdigits.getWaveforms(eventNo)
+            fullRawDigits                      = self.rawdigits.getWaveforms(eventNo)
+            self.rawWaveforms[eventNo]         = fullRawDigits[self.startIndex:self.stopIndex,:]
             self.waveLessPedAll[eventNo],      \
             self.pedestalsAll[eventNo],        \
             self.rmsAll[eventNo]               = getPedestalsAndRMS(self.rawWaveforms[eventNo,:,:])
