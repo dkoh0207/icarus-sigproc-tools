@@ -16,8 +16,8 @@ class Denoiser:
 
         self.fullEvent = fullEvent
         self.filter_1d = ROOT.sigproc_tools.Morph1D()
-        self.filter_2d = ROOT.sigproc_tools.Morph2D()
-        self.denoiser = ROOT.sigproc_tools.Denoising()
+        # self.filter_2d = ROOT.sigproc_tools.Morph2D()
+        # self.denoiser = ROOT.sigproc_tools.Denoising()
         self.numChannels = kwargs.get('numChannels', 576)
         self.numTicks = kwargs.get('numTicks', 4096)
 
