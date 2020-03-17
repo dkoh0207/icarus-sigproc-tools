@@ -21,7 +21,7 @@ class AdaptiveFilter:
         wLC_float2d = sproc.pyutil.as_float32_vector_2d(
             self.waveLessCoherent)
         self.selectVals = sproc.pyutil.as_bool_vector_2d(selectVals)
-        self.noise_var = utils.compute_noise_power(
+        self.noise_var = utils.estimateNoiseVariance(
             wLC_float2d, self.selectVals)
 
     def denoise_1d(self):

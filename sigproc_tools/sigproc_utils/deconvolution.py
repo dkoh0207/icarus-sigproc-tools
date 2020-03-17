@@ -44,6 +44,19 @@ class Deconvolution:
         self.deconvWaveform = np.asarray(output)
         return self.deconvWaveform
 
+
+    def fourier_shrinkage_1d(self, regParam=0.001):
+        output = ROOT.std.vector('std::vector<float>')(
+            self.numChannels, ROOT.std.vector('float')(self.nTicks))
+        input = sproc.pyutil.as_float32_vector_2d(
+            self.waveLessNoise)
+
+        self.deconvolver.FourierShrinkage1D(
+            output, input, self.response_fn, regParam)
+
+        self.deconvWaveform = np.asarray(output)
+        return self.deconvWaveform
+
     def deconvolve2D(self):
         raise NotImplementedError
 

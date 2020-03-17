@@ -4,7 +4,7 @@ from sproc import sproc
 
 class Denoiser:
     '''
-    Python class to interface C++ backend denoising modules conveniently. 
+    Python class to interface C++ backend denoising modules conveniently.
 
     USAGE:
 
@@ -15,11 +15,10 @@ class Denoiser:
     def __init__(self, fullEvent, **kwargs):
 
         self.fullEvent = fullEvent
-        self.filter_1d = ROOT.sigproc_tools.Morph1D()
-        # self.filter_2d = ROOT.sigproc_tools.Morph2D()
-        # self.denoiser = ROOT.sigproc_tools.Denoising()
+        self.denoiser = ROOT.sigproc_tools.Denoising()
         self.numChannels = kwargs.get('numChannels', 576)
         self.numTicks = kwargs.get('numTicks', 4096)
+        self.numGroups = kwargs.get('numGroups', 64)
 
     def removeCoherentNoise2D(self, filter_name='d',
                             structuringElement=(7,20),
@@ -44,11 +43,11 @@ class Denoiser:
 
         # Run 2D ROI finding and denoising.
         self.denoiser.removeCoherentNoise2D(
-            waveLessCoherent, filteredWaveforms, morphedWaveforms, 
-            intrinsicRMS, selectVals, roi, correctedMedians, 
-            filter_name, 64, structuringElement[0], structuringElement[1], 
+            waveLessCoherent, filteredWaveforms, morphedWaveforms,
+            intrinsicRMS, selectVals, roi, correctedMedians,
+            filter_name, self.numGroups, structuringElement[0], structuringElement[1],
             window, threshold)
-        
+
         # Coherent Noise Removed 2D Waveform
         self.waveLessCoherent = np.asarray(waveLessCoherent)
         self.correctedMedians = np.asarray(correctedMedians)
@@ -58,21 +57,23 @@ class Denoiser:
         self.roi = sproc.pyutil.as_ndarray(roi).astype(bool).astype(int)
         # Region to protect signal from coherent noise removal. Note that
         # in general self.roi != self.selectVals, since it may be desirable to
-        # be conservative with the ROIs. 
+        # be conservative with the ROIs.
         self.selectVals = sproc.pyutil.as_ndarray(selectVals).astype(bool).astype(int)
         # Intrinsic RMS after coherent noise removal.
         self.intrinsicRMS = np.asarray(intrinsicRMS)
 
 
-    def refine_rois(self):
-        '''
-        Use opening/closing operations to eliminate fragmented false rois.
-        '''
-        pass
+    def subtractPedestals(self, wf):
+
+        wfInput = sproc.pyutil.as_float32_vector_2d(wf)
+        selectVals = sproc.pyutil.as_bool_vector_2d(self.selectVals.astype(bool))
+        self.denoiser.subtractPedestals(wfInput, selectVals)
+
+        return wfInput
 
 
     def median_denoising(self):
         '''
-        Apply median filter for secondary denoising after CNC. 
+        Apply median filter for secondary denoising after CNC.
         '''
         pass
