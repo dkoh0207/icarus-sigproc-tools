@@ -1,5 +1,13 @@
 import numpy as np
+
+SPROC_PATH='/sdf/group/neutrino/koh0207/DSP/signal_processing'
+import sys
+sys.path.insert(0,'%s/build/lib' % SPROC_PATH)
+sys.path.insert(0,'%s/python'    % SPROC_PATH)
 import ROOT
+ROOT.gSystem.Load('%s/build/lib/libLiteFMWK_PyUtil.so' % SPROC_PATH)
+ROOT.gSystem.Load('%s/build/lib/libLiteFMWK_sigproc_tools.so' % SPROC_PATH)
+
 from sproc import sproc
 
 #######################################################################
@@ -171,75 +179,46 @@ class Morphology2DFast(MorphologyBase):
         self.morph2d = ROOT.sigproc_tools.Morph2DFast()
 
     def dilation(self, se=(7, 20)):
-        '''
-        INPUTS:
-            - input (np.float32 array): input 2D array to compute dilation.
-            If None, uses the stored 2D array (instance attribute).
-            - se (int tuple): structuring element; determines the size of
-            moving window.
-
-        RETURNS:
-            - dilation1D (np.array): 1D dilation filter applied output.
-        '''
         numChannels, numTicks = self.waveform.shape
-        pad_x = se[0] - (numChannels % se[0])
-        pad_y = se[1] - (numTicks % se[1])
-        paddedWaveform = np.pad(
-            self.waveform, [(0, pad_x), (0, pad_y)], constant_values=-INF)
-        numChannelsPadded, numTicksPadded = paddedWaveform.shape
-        paddedWaveform = sproc.pyutil.as_float32_vector_2d(paddedWaveform)
+        waveform = sproc.pyutil.as_float32_vector_2d(self.waveform)
         out = ROOT.std.vector('std::vector<float>')(
-            numChannelsPadded, ROOT.std.vector('float')(numTicksPadded))
-        self.morph2d.getDilation(paddedWaveform, se[0], se[1], out)
+            numChannels, ROOT.std.vector('float')(numTicks))
+        self.morph2d.getDilation(waveform, se[0], se[1], out)
         out = np.asarray(out).astype(np.float32)
-        out = out[:numChannelsPadded-pad_x, :numTicksPadded-pad_y]
         return out
 
     def erosion(self, se=(7, 20)):
-        '''
-        INPUTS:
-            - input (np.float32 array): input 2D array to compute dilation.
-            - se (int tuple): structuring element; determines the size of
-            moving window.
-
-        RETURNS:
-            - dilation2D (np.array): 1D dilation filter applied output.
-        '''
         numChannels, numTicks = self.waveform.shape
-        pad_x = se[0] - (numChannels % se[0])
-        pad_y = se[1] - (numTicks % se[1])
-        paddedWaveform = np.pad(
-            self.waveform, [(0, pad_x), (0, pad_y)], constant_values=INF)
-        numChannelsPadded, numTicksPadded = paddedWaveform.shape
-        paddedWaveform = sproc.pyutil.as_float32_vector_2d(paddedWaveform)
+        waveform = sproc.pyutil.as_float32_vector_2d(self.waveform)
         out = ROOT.std.vector('std::vector<float>')(
-            numChannelsPadded, ROOT.std.vector('float')(numTicksPadded))
-        self.morph2d.getErosion(paddedWaveform, se[0], se[1], out)
+            numChannels, ROOT.std.vector('float')(numTicks))
+        self.morph2d.getErosion(waveform, se[0], se[1], out)
         out = np.asarray(out).astype(np.float32)
-        out = out[:numChannelsPadded-pad_x, :numTicksPadded-pad_y]
         return out
 
     def gradient(self, se=(7, 20)):
-        '''
-        INPUTS:
-            - input (np.float32 array): input 2D array to compute dilation.
-            - se (int tuple): structuring element; determines the size of
-            moving window.
-
-        RETURNS:
-            - dilation2D (np.array): 1D dilation filter applied output.
-        '''
-        dilation = self.dilation(se)
-        erosion = self.erosion(se)
-        out = dilation - erosion
-        return out
-
-    def opening(self, se=(7, 20)):
-        erosion = self.erosion(se)
-        out = self.dilation(erosion)
+        numChannels, numTicks = self.waveform.shape
+        waveform = sproc.pyutil.as_float32_vector_2d(self.waveform)
+        out = ROOT.std.vector('std::vector<float>')(
+            numChannels, ROOT.std.vector('float')(numTicks))
+        self.morph2d.getGradient(waveform, se[0], se[1], out)
+        out = np.asarray(out).astype(np.float32)
         return out
 
     def closing(self, se=(7, 20)):
-        dilation = self.dilation(se)
-        out = self.erosion(dilation)
+        numChannels, numTicks = self.waveform.shape
+        waveform = sproc.pyutil.as_float32_vector_2d(self.waveform)
+        out = ROOT.std.vector('std::vector<float>')(
+            numChannels, ROOT.std.vector('float')(numTicks))
+        self.morph2d.getClosing(waveform, se[0], se[1], out)
+        out = np.asarray(out).astype(np.float32)
+        return out
+
+    def opening(self, se=(7, 20)):
+        numChannels, numTicks = self.waveform.shape
+        waveform = sproc.pyutil.as_float32_vector_2d(self.waveform)
+        out = ROOT.std.vector('std::vector<float>')(
+            numChannels, ROOT.std.vector('float')(numTicks))
+        self.morph2d.getOpening(waveform, se[0], se[1], out)
+        out = np.asarray(out).astype(np.float32)
         return out

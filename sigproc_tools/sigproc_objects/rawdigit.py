@@ -39,10 +39,12 @@ class RawDigit:
         """
         # First check to see if this event has an entry (can happen in multiTPC readout)
         if self.numChannels(eventNum) > 0:
-            nTicks    = self.numTicks(eventNum)
-            nChannels = self.numChannels(eventNum)
+            nTicks    = int(self.numTicks(eventNum))
+            nChannels = int(self.numChannels(eventNum))
             waveforms = self.eventsFolder.array(self.producer+"obj.fADC",entrystart=eventNum,entrystop=eventNum+1,flatten=True)
+            print(waveforms.shape)
             waveforms = np.concatenate([waveforms,[0,nTicks]])  # This adds the pattern "0, 4096" to the end of the 1D array
+            print(waveforms.shape)
             waveforms = waveforms.reshape(nChannels,nTicks+2)   # Now we make a 2D array of 384 channels by 4096+2 ticks
             return waveforms[:,:-2]
         else:

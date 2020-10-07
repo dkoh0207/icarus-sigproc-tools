@@ -15,7 +15,7 @@ class AdaptiveFilter:
         self.nTicks = waveLessCoherent.shape[1]
         if selectVals is None:
             selectVals = ROOT.std.vector('std::vector<bool>')(
-                self.numChannels, ROOT.std.vector('bool')(self.numTicks))
+                self.numChannels, ROOT.std.vector('bool')(self.nTicks))
         self.deconvolver = ROOT.sigproc_tools.AdaptiveWiener()
         utils = ROOT.sigproc_tools.MiscUtils()
         wLC_float2d = sproc.pyutil.as_float32_vector_2d(
